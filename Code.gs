@@ -45,12 +45,42 @@ function sendUserError(message, debugMsg) {
 }
 
 /**
- * function  `getAuthType()`
- *
- * @returns {Object} `AuthType` used by the connector.
+ * Returns the Auth Type of this connector.
+ * @return {object} The Auth type.
  */
 function getAuthType() {
-  return {type: 'NONE'};
+  var cc = DataStudioApp.createCommunityConnector();
+  return cc.newAuthTypeResponse()
+    .setAuthType(cc.AuthType.KEY)
+    .setHelpUrl('https://www.example.org/connector-auth-help')
+    .build();
+}
+
+/**
+ * Returns true if the auth service has access.
+ * @return {boolean} True if the auth service has access.
+ */
+function isAuthValid() {
+  var userProperties = PropertiesService.getUserProperties();
+  var key = userProperties.getProperty('dscc.key');
+  // This assumes you have a validateKey function that can validate
+  // if the key is valid.
+  return validateKey(key);
+}
+
+/**
+ * Resets the auth service.
+ */
+function resetAuth() {
+  var userProperties = PropertiesService.getUserProperties();
+  userProperties.deleteProperty('dscc.key');
+}
+
+/**
+ * Validates the key.
+ */
+function validateKey(key) {
+  return true;
 }
 
 /**

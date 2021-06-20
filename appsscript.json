@@ -18,5 +18,6 @@
     "feeType": [
       "FREE"
     ]
-  }
+  },
+  "exceptionLogging": "STACKDRIVER"
 }
