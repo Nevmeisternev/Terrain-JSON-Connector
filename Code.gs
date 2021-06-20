@@ -120,20 +120,20 @@ function getCachedData(url) {
 * @returns {Object} fields for connector.
 */
 function getFields(content) {
+  var headers = new Array();
   var cc = DataStudioApp.createCommunityConnector();
   var fields = cc.getFields();
   var types = cc.FieldType;
   var aggregations = cc.AggregationType;
-  
-  var header_row = content[0];
-  
-  header_row.forEach(function(header) {
+
+  headers = content[0];
+  for (var i = 0; i < headers.length; i++) {
   fields
     .newDimension()
-    .setId(header.replace(' ', '_'))
-    .setName(header)
+    .setId(headers[i].replace(' ', '_'))
+    .setName(headers[i])
     .setType(types.TEXT);
-  });
+  }
 
   return fields;
 }
@@ -171,6 +171,7 @@ function getData(request) {
 * A test to test the connector in development
 **/
 function test() {
+  var test = getCachedData('https://drive.google.com/uc?export=download&id=18co5qooVbmtYKWwSZY9u-zVSQMpIOfUz');
   var fields = getFields(test);
-  Logger.log(test);
+  Logger.log('Finished the test');
 }
