@@ -20,7 +20,7 @@
 //  This copyright notice MUST APPEAR in all copies of the script!
 
 //Global Community Connector
-var debug = true;
+var debug = false;
 
 /**
  * Throws and logs script exceptions.
@@ -30,12 +30,14 @@ var debug = true;
 function sendUserError(message, debugMsg) {
   var cc = DataStudioApp.createCommunityConnector();
   if (debug) {
+    Logger.log('Error: ' + message + ', debug: ' + debugMsg);
     cc.newUserError()
     .setText(message)
     .setDebugText(debugMsg)
     .throwException();
   }
   else {
+    Logger.log('Error: ' + message);
     cc.newUserError()
     .setText(message)
     .throwException();
@@ -59,6 +61,17 @@ function getAuthType() {
  */
 function isAdminUser() {
   return debug;
+}
+
+/**
+ * Returns an array with the id and the index.
+ */
+function getHeaderOrder(header_row) {
+  var headerindex = [];
+  for (var i = 0; i < header_row.length; i++) {
+    headerindex[createIdfromName(header_row[i])] = i;
+  }
+  return headerindex;
 }
 
 /**
@@ -90,7 +103,6 @@ function getConfig(request) {
   return config.build();
 }
 
-
 /**
  * Gets cached response. If the response has not been cached, make
  * the fetchJSON call, then cache and return the response.
@@ -104,14 +116,39 @@ function getCachedData(url) {
   var cacheKey = url.replace(/[^a-zA-Z0-9]+/g, '');
   var content = [];
 
+  Logger.log('Getting the data.');
+
   cacheData = cache.get(cacheKey);
   if (cacheData !== null) {
+    Logger.log('Getting the data from cache.');
     content = JSON.parse(cacheData);
   } else {
+    Logger.log('Getting the data from url.');
     content = ImportJSON(url);
     cache.put(cacheKey, JSON.stringify(content), cacheExpTime);
   }
   return content;
+}
+
+/**
+* Returns the fields for the connector.
+*
+* @returns {Object} fields for connector.
+*/
+function getColumns(content, fields) {
+
+  var headersOrder = getHeaderOrder(content[0]);
+  var contentNoHeader = content.slice(1); 
+ 
+  return contentNoHeader.map(function(row) {
+    var rowValues = [];
+    fields.asArray().forEach(function(field) {
+      var id = field.getId();
+      var fieldValue = row === null ? '' : row[headersOrder[id]];
+      rowValues.push(field, fieldValue);
+    });
+    return {values: rowValues};
+  });
 }
 
 /**
@@ -128,9 +165,9 @@ function getFields(content) {
 
   headers = content[0];
   for (var i = 0; i < headers.length; i++) {
-  fields
+    fields
     .newDimension()
-    .setId(headers[i].replace(' ', '_'))
+    .setId(createIdfromName(headers[i]))
     .setName(headers[i])
     .setType(types.TEXT);
   }
@@ -154,7 +191,7 @@ function getSchema(request) {
  *
  * @param   {Object} request  Data request parameters.
  * @returns {Object}          Contains the schema and data for the given request.
-
+ */
 function getData(request) {
   var content = getCachedData(request.configParams.url);
   var fields = getFields(request, content);
@@ -165,7 +202,13 @@ function getData(request) {
     rows: columns
   };
 }
- */
+
+/*
+* 
+*/
+function createIdfromName(name) {
+  return name.replace(' ', '_');
+}
 
 /**
 * A test to test the connector in development
@@ -173,5 +216,7 @@ function getData(request) {
 function test() {
   var test = getCachedData('https://drive.google.com/uc?export=download&id=18co5qooVbmtYKWwSZY9u-zVSQMpIOfUz');
   var fields = getFields(test);
+  var columns = getColumns(test, fields);
+
   Logger.log('Finished the test');
 }

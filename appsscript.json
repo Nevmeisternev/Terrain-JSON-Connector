@@ -6,11 +6,17 @@
     "company": "2nd Blackburn Scouts",
     "companyUrl": "https://www.2ndblackburnscouts.org.au/",
     "addonUrl": "https://github.com/googledatastudio/community-connectors/blob/master/JSON-connect/README.md",
-    "supportUrl": "https://github.com/googledatastudio/community-connectors/issues/new?title\u003dJSON%20Connect%20Connector%20Issue",
+    "supportUrl": "https://github.com/googledatastudio/community-connectors/issues/new?title=JSON%20Connect%20Connector%20Issue",
     "description": "This is a modification of a Free JSON connector to work with Terrain. Fetch data from any JSON data source by URL. Use caching to speed up rendering. It is created by https://lingewoud.nl/",
-    "sources": ["CUSTOM_JSON"],
+    "sources": [
+      "CUSTOM_JSON"
+    ],
     "shortDescription": "Connect to JSON data by URL",
-    "authType": ["NONE"],
-    "feeType": ["FREE"]
+    "authType": [
+      "NONE"
+    ],
+    "feeType": [
+      "FREE"
+    ]
   }
 }
