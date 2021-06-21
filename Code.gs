@@ -20,7 +20,7 @@
 //  This copyright notice MUST APPEAR in all copies of the script!
 
 //Global Community Connector
-var debug = false;
+var debug = true;
 
 /**
  * Throws and logs script exceptions.
@@ -49,38 +49,11 @@ function sendUserError(message, debugMsg) {
  * @return {object} The Auth type.
  */
 function getAuthType() {
-  var cc = DataStudioApp.createCommunityConnector();
-  return cc.newAuthTypeResponse()
-    .setAuthType(cc.AuthType.KEY)
-    .setHelpUrl('https://www.example.org/connector-auth-help')
-    .build();
-}
-
-/**
- * Returns true if the auth service has access.
- * @return {boolean} True if the auth service has access.
- */
-function isAuthValid() {
-  var userProperties = PropertiesService.getUserProperties();
-  var key = userProperties.getProperty('dscc.key');
-  // This assumes you have a validateKey function that can validate
-  // if the key is valid.
-  return validateKey(key);
-}
-
-/**
- * Resets the auth service.
- */
-function resetAuth() {
-  var userProperties = PropertiesService.getUserProperties();
-  userProperties.deleteProperty('dscc.key');
-}
-
-/**
- * Validates the key.
- */
-function validateKey(key) {
-  return true;
+  // Returns the authentication method required.
+  var response = {
+    "type": "NONE"
+  };
+  return response;
 }
 
 /**
@@ -187,6 +160,7 @@ function getColumns(content, fields) {
 * @returns {Object} fields for connector.
 */
 function getFields(content) {
+  Logger.log('Getting the fields');
   var headers = new Array();
   var cc = DataStudioApp.createCommunityConnector();
   var fields = cc.getFields();
@@ -212,6 +186,7 @@ function getFields(content) {
  * @returns {Object} Schema for the given request.
  */
 function getSchema(request) {
+  Logger.log('Getting the schema');
   var content = getCachedData(request.configParams.url);
   return {schema: getFields(content).build()};
 }
@@ -223,6 +198,7 @@ function getSchema(request) {
  * @returns {Object}          Contains the schema and data for the given request.
  */
 function getData(request) {
+  Logger.log('Getting the data');
   var content = getCachedData(request.configParams.url);
   var fields = getFields(request, content);
   var columns = getColumns(content, fields);
