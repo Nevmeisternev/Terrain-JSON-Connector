@@ -30,14 +30,14 @@ var debug = true;
 function sendUserError(message, debugMsg) {
   var cc = DataStudioApp.createCommunityConnector();
   if (debug) {
-    Logger.log('Error: ' + message + ', debug: ' + debugMsg);
+    console.log('Error: ' + message + ', debug: ' + debugMsg);
     cc.newUserError()
     .setText(message)
     .setDebugText(debugMsg)
     .throwException();
   }
   else {
-    Logger.log('Error: ' + message);
+    console.log('Error: ' + message);
     cc.newUserError()
     .setText(message)
     .throwException();
@@ -119,16 +119,23 @@ function getCachedData(url) {
   var cacheKey = url.replace(/[^a-zA-Z0-9]+/g, '');
   var content = [];
 
-  Logger.log('Getting the data.');
-
-  cacheData = cache.get(cacheKey);
-  if (cacheData !== null) {
-    Logger.log('Getting the data from cache.');
-    content = JSON.parse(cacheData);
-  } else {
-    Logger.log('Getting the data from url.');
-    content = ImportJSON(url);
-    cache.put(cacheKey, JSON.stringify(content), cacheExpTime);
+  console.info('Getting the cached data.');
+  try
+  {
+    cacheData = cache.get(cacheKey);
+    if (cacheData !== null) {
+      console.info('Getting the data from cache.');
+      content = JSON.parse(cacheData);
+    } else {
+      console.info('Getting the data from url.');
+      content = ImportJSON(url);
+      cache.put(cacheKey, JSON.stringify(content), cacheExpTime);
+    }
+  }
+  catch(e)
+  {
+    console.error(e);
+    sendUserError(e);
   }
   return content;
 }
@@ -139,19 +146,25 @@ function getCachedData(url) {
 * @returns {Object} fields for connector.
 */
 function getColumns(content, fields) {
-
   var headersOrder = getHeaderOrder(content[0]);
   var contentNoHeader = content.slice(1); 
- 
-  return contentNoHeader.map(function(row) {
-    var rowValues = [];
-    fields.asArray().forEach(function(field) {
-      var id = field.getId();
-      var fieldValue = row === null ? '' : row[headersOrder[id]];
-      rowValues.push(field, fieldValue);
+  try
+  {
+    return contentNoHeader.map(function(row) {
+      var rowValues = [];
+      fields.asArray().forEach(function(field) {
+        var id = field.getId();
+        var fieldValue = row === null ? '' : row[headersOrder[id]];
+        rowValues.push(field, fieldValue);
+      });
+      return {values: rowValues};
     });
-    return {values: rowValues};
-  });
+  }
+  catch(e)
+  {
+    console.error(e);
+    sendUserError(e);
+  }
 }
 
 /**
@@ -160,20 +173,28 @@ function getColumns(content, fields) {
 * @returns {Object} fields for connector.
 */
 function getFields(content) {
-  Logger.log('Getting the fields');
+  console.info('Getting the fields');
   var headers = new Array();
   var cc = DataStudioApp.createCommunityConnector();
   var fields = cc.getFields();
   var types = cc.FieldType;
   var aggregations = cc.AggregationType;
 
-  headers = content[0];
-  for (var i = 0; i < headers.length; i++) {
-    fields
-    .newDimension()
-    .setId(createIdfromName(headers[i]))
-    .setName(headers[i])
-    .setType(types.TEXT);
+  try
+  {
+    headers = content[0];
+    for (var i = 0; i < headers.length; i++) {
+      fields
+      .newDimension()
+      .setId(createIdfromName(headers[i]))
+      .setName(headers[i])
+      .setType(types.TEXT);
+    }
+  }
+  catch(e)
+  {
+    console.error(e);
+    sendUserError(e);
   }
 
   return fields;
@@ -186,7 +207,7 @@ function getFields(content) {
  * @returns {Object} Schema for the given request.
  */
 function getSchema(request) {
-  Logger.log('Getting the schema');
+  console.info('Getting the schema');
   var content = getCachedData(request.configParams.url);
   return {schema: getFields(content).build()};
 }
@@ -202,11 +223,19 @@ function getData(request) {
   var content = getCachedData(request.configParams.url);
   var fields = getFields(request, content);
   var columns = getColumns(content, fields);
-    
-  return {
-    schema: fields.build(),
-    rows: columns
-  };
+
+  try
+  {    
+    return {
+      schema: fields.build(),
+      rows: columns
+    };
+  }
+  catch(e)
+  {
+    console.error(e);
+    sendUserError(e);
+  }
 }
 
 /*
@@ -224,5 +253,5 @@ function test() {
   var fields = getFields(test);
   var columns = getColumns(test, fields);
 
-  Logger.log('Finished the test');
+  console.info('Finished the test');
 }
