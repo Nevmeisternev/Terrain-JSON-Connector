@@ -21,6 +21,7 @@
 
 //Global Community Connector
 var debug = true;
+var useTestData = true;
 
 /**
  * Throws and logs script exceptions.
@@ -209,6 +210,11 @@ function getFields(content) {
 function getSchema(request) {
   console.info('Getting the schema');
   var content = getCachedData(request.configParams.url);
+  if (useTestData)
+  {
+    var testdata = provideTestData();
+    content = JSON.parse(testdata);
+  }
   return {schema: getFields(content).build()};
 }
 
@@ -219,8 +225,13 @@ function getSchema(request) {
  * @returns {Object}          Contains the schema and data for the given request.
  */
 function getData(request) {
-  Logger.log('Getting the data');
+  console.info('Getting the data');
   var content = getCachedData(request.configParams.url);
+  if (useTestData)
+  {
+    var testdata = provideTestData();
+    content = JSON.parse(testdata);
+  }
   var fields = getFields(request, content);
   var columns = getColumns(content, fields);
 
@@ -245,13 +256,3 @@ function createIdfromName(name) {
   return name.replace(' ', '_');
 }
 
-/**
-* A test to test the connector in development
-**/
-function test() {
-  var test = getCachedData('https://drive.google.com/uc?export=download&id=18co5qooVbmtYKWwSZY9u-zVSQMpIOfUz');
-  var fields = getFields(test);
-  var columns = getColumns(test, fields);
-
-  console.info('Finished the test');
-}
